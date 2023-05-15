@@ -1,0 +1,6 @@
+pylint
+
+numpy
+#pillow
+#matplotlib
+open3d
