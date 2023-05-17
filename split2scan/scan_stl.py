@@ -43,10 +43,10 @@ def center_mesh(mesh):
     return new
 
 def stl2pcl(stl):
-    pcl = stl.sample_points_uniformly(10000)
+    pcl = stl.sample_points_uniformly(50000)
     return pcl
 
-def hide_point(pcl, camera=(0,-0.1, 0), radius=100.1):
+def hide_point(pcl, camera=(0,-0.1, 0), radius=100):
     _, pt_map = pcl.hidden_point_removal(camera, radius)
     pcd = pcl.select_by_index(pt_map)
     show_pcl(pcd)
@@ -59,7 +59,7 @@ def scan_mesh(mesh, positions, filename):
         #show_pcl(pcl)
         print("camera", p)
         m = hide_point(pcl, camera=p)
-        show_pcl(m)
+        #show_pcl(m)
         filen = filename + str(nr) + ".ply"
         o3d.io.write_point_cloud(filen, m)
         nr += 1
@@ -71,10 +71,11 @@ if __name__=="__main__":
     mesh = o3d.io.read_triangle_mesh(str(INFIL))
     #show_mesh(mesh)
     cmesh = center_mesh(mesh)
+    print(cmesh.get_axis_aligned_bounding_box())
     mypcl = stl2pcl(cmesh)
     o3d.io.write_point_cloud('testdata/stl/tooth/two_tooth/fortand.ply', mypcl)
     #show_mesh(cmesh)
-    positions = [(0, -0.1, 0),(0.0, -0.0, -10.1)]
+    positions = [(0, -0.2, 0),(0.2, -0.2, 0.0),(0.2, -0.2, 0),(0.0, -0.0, -10.1)]
     scan_mesh(cmesh, positions, "file")
 
     # o3d.io.write_point_cloud(str(OUTPATH / 'crop.ply')
