@@ -18,15 +18,18 @@ disable=line-too-long
 
 #generated-members=cv2.* o3d.* cv.*
 
+generated-members= o3d.*
+
 [BASIC]
 
 good-names=i,
            j,
            k,
+           p,
            s,
            x,y,z,v,u,
            vx,vy,vz,
            X,Y,Z,
            fd,
-           ex,
+           nr,
            Run,
