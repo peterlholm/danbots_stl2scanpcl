@@ -55,32 +55,19 @@ def show_mesh(meshlist, axis=True, name="showmesh"):
 
 def show_pcl(meshlist, axis=True, name="showpcl"):
     "Show pcl"
-    #meshlist = []
     for p in meshlist:
         if not p.has_normals():
             p.estimate_normals()
-            #pcl.compute_normals()
-    #meshlist.append(pcl)
     if axis:
         axis_pcd = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.01, origin=[0, -0.0, 0.0])
         meshlist.append(axis_pcd)
-
-    o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600,
-                               
-                                )
-                                # point_show_normal=False,
-                                # mesh_show_back_face=True,
-                                # mesh_show_wireframe=False)
-    
-
+    o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600)
+ 
 def show_pcl2(meshlist, axis=True, name="showpcl", position=None):
     "Show pcl"
-    #meshlist = []
     for p in meshlist:
         if not p.has_normals():
             p.estimate_normals()
-            #pcl.compute_normals()
-    #meshlist.append(pcl)
     if axis:
         axis_pcd = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.01, origin=[0, -0.0, 0.0])
         meshlist.append(axis_pcd)
@@ -92,10 +79,6 @@ def show_pcl2(meshlist, axis=True, name="showpcl", position=None):
                                 front=position,
                                 lookat=(0,0,0),
                                 up=(0,1,0))
-                                # zoom=_ZOOM,
-                                # front=_FRONT,
-                                # lookat=_LOOKAT,
-                                # up=_UP,
                                 # point_show_normal=False,
                                 # mesh_show_back_face=True,
                                 # mesh_show_wireframe=False)
@@ -139,7 +122,6 @@ def scan_mesh(mesh, positions, filename):
     for p in positions:
         pcl = deepcopy(opcl)
         p_view = hide_point(pcl, camera=p)
-        #show_pcl(pcl)
         print("camera", p)
         newpcl = remove_point_distance(p_view, p, max_dist=MAX_DISTANCE)
         if PAINT_COLOR:
@@ -154,10 +136,7 @@ if __name__=="__main__":
     INFIL = Path('testdata/stl/tooth/two_tooth/fortand_r.stl')
     OUTPATH = Path(__file__).parent.parent / "tmp"
 
-    #point_distance((0,0,0), (0.01, 0.01, 0.01))
     mymesh = o3d.io.read_triangle_mesh(str(INFIL))
-    # if DEBUG:
-    #     show_mesh(mymesh, name="Original mesh")
     cmesh = center_mesh(mymesh)
     orgpcl = stl2pcl(cmesh, 1000000)
     if DEBUG:
@@ -180,18 +159,5 @@ if __name__=="__main__":
                     (-dx*2, Y+2*dy, Z+2*dz), (-dx, Y+2*dy, Z+2*dz),  (0.00, Y+2*dy, Z+2*dz), (+dx, Y+2*dy, Z+2*dz), (2*dx, Y+2*dy, Z+2*dz),
                     (-dx*2, Y+dy, Z+3*dz), (-dx, Y+dy, Z+3*dz),  (0.00, Y+dy, Z+3*dz), (+dx, Y+dy, Z+3*dz), (2*dx, Y+dy, Z+3*dz),
                     (-dx*2, Y, Z+3*dz), (-dx, Y, Z+3*dz),  (0.00, Y, Z+3*dz), (+dx, Y, Z+3*dz), (2*dx, Y, Z+3*dz),
-
-                #    (-0.01, -0.01, -0.02),(-0.005, -0.01, -0.02),(0.00, -0.01, -0.02),(0.005, -0.01, -0.02),(0.01, -0.01, -0.02), #6-10
-                #    (-0.01, -0.007, -0.02),(-0.005, -0.007, -0.02),(+0.0, -0.007, -0.02),(0.007, -0.005, -0.02),(0.01, -0.007, -0.02), #11-15
-                #    (-0.01, -0.00, -0.02),(-0.005, -0.00, -0.02),(+0.0, -0.00, -0.02),(0.005, -0.00, -0.02),(0.01, -0.00, -0.02), # 16-20
-                #    (-0.01, -0.00, -0.01),(-0.005, -0.00, -0.01),(+0.0, -0.00, -0.01),(0.005, -0.00, -0.01),(0.01, -0.00, -0.01), #21- 25
-                   ]
+                  ]
     scan_mesh(cmesh, mypositions, "tmp/file")
-
-    # o3d.io.write_point_cloud(str(OUTPATH / 'crop.ply')
-    # pcl = stl2pcl(crop)
-    # o3d.io.write_triangle_mesh('crop.stl', crop)
-    # show_pcl(pcl)
-    # hide_point(pcl)
-    #mesh2ply(INFIL,OUTPATH / 'Bridge1.ply')
-    #meshsurface2ply(INFIL, OUTPATH / 'fil1.ply', OUTPATH / 'fil2.ply')
