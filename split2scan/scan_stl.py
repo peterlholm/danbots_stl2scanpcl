@@ -15,7 +15,7 @@ FULL_RES_POINTS = 1000000
 PAINT_COLOR = True
 MAX_DISTANCE = 0.135
 
-DEBUG = True
+DEBUG = False
 
 def point_distance(p1, p2):
     "compute distance between 2 points"
@@ -32,7 +32,8 @@ def remove_point_distance(pcl, pkt, max_dist=1):
     if pcl.has_colors():
         colors = np.asarray(pcl.colors)
         pcl1.colors = o3d.utility.Vector3dVector(colors[distarr <= max_dist ])
-    print(f"removed {len(pcl.points) - len(pcl1.points)} points")
+    if DEBUG:
+        print(f"removed {len(pcl.points) - len(pcl1.points)} points")
     return pcl1
 
 def show_mesh(meshlist, axis=True, name="showmesh"):
@@ -119,14 +120,16 @@ def scan_mesh(mesh, positions, filename):
     ]
     nr=1
     opcl = stl2pcl(mesh)
+    o3d.io.write_point_cloud(str(Path(filename).parent / 'ORG/center.ply'), opcl)
     for p in positions:
         pcl = deepcopy(opcl)
         p_view = hide_point(pcl, camera=p)
-        print("camera", p)
+        print("camera position", p)
         newpcl = remove_point_distance(p_view, p, max_dist=MAX_DISTANCE)
         if PAINT_COLOR:
             newpcl.paint_uniform_color(color[nr-1])
-        show_pcl2([p_view, newpcl], name="camera "+str(p), position=p)
+        if DEBUG:
+            show_pcl2([p_view, newpcl], name="camera "+str(p), position=p)
         filen = f"{filename}{nr:02}.ply"
         o3d.io.write_point_cloud(filen, p_view)
         print("Number of points", len(p_view.points))
@@ -135,17 +138,20 @@ def scan_mesh(mesh, positions, filename):
 if __name__=="__main__":
     INFIL = Path('testdata/stl/tooth/two_tooth/fortand_r.stl')
     OUTPATH = Path(__file__).parent.parent / "tmp"
-
+    print(OUTPATH)
     mymesh = o3d.io.read_triangle_mesh(str(INFIL))
     cmesh = center_mesh(mymesh)
-    orgpcl = stl2pcl(cmesh, 1000000)
+
+    (OUTPATH / 'ORG').mkdir(exist_ok=True)
+    o3d.io.write_triangle_mesh(str(OUTPATH / 'ORG' / 'center.stl'), cmesh)
+
     if DEBUG:
+        orgpcl = stl2pcl(cmesh, 1000000)
         show_mesh([cmesh], name="Centered mesh")
-        o3d.io.write_triangle_mesh(str(OUTPATH / 'center.ply'),cmesh)
         #show_pcl(orgpcl, name="original PCL")
         print(f"size  min: {orgpcl.get_min_bound()} Max: {orgpcl.get_max_bound()}")
-    o3d.io.write_point_cloud('testdata/stl/tooth/two_tooth/fortand.ply', orgpcl)
-    mypcl = stl2pcl(cmesh,1000)
+        o3d.io.write_point_cloud('testdata/stl/tooth/two_tooth/fortand.ply', orgpcl)
+
     dx= 0.006
     Y=-0.000
     dy=-0.01
