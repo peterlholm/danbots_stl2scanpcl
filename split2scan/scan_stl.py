@@ -143,6 +143,7 @@ if __name__=="__main__":
     cmesh = center_mesh(mymesh)
 
     (OUTPATH / 'ORG').mkdir(exist_ok=True)
+    cmesh.compute_triangle_normals()
     o3d.io.write_triangle_mesh(str(OUTPATH / 'ORG' / 'center.stl'), cmesh)
 
     if DEBUG:
