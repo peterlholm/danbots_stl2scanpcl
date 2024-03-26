@@ -8,7 +8,7 @@ from copy import deepcopy
 from pathlib import Path
 import open3d as o3d
 
-DEBUG = True
+DEBUG = False
 def show_mesh(mesh, axis=True, name="showmesh"):
     "Show Mesh"
     meshlist = [mesh]
@@ -63,6 +63,18 @@ def hide_point(pcl, camera=(0,-0.1, 0), radius=1.1):
         show_pcl(pcd, name="HIDE " + str(camera))
     return pcd
 
+def transform_pcl(pcl, position):
+    "transform pointcloud to look as camera"
+    print("Position", position)
+    transform = (-position[0],-position[1],-position[2])
+    pcl1 = deepcopy(pcl)
+    print(pcl1.get_center())
+    pcl1 = pcl1.translate(transform, relative=True)
+    #o3d.io.write_point_cloud('tmp/trans1.ply', pcl1)
+    return pcl1
+    pcl2 = pcl.translate((0.01,0,0), relative=False)
+    o3d.io.write_point_cloud('tmp/trans2.ply', pcl2)
+    
 def scan_mesh(mesh, positions, filename):
     "filter mesh from given positions"
     nr=1
@@ -74,7 +86,10 @@ def scan_mesh(mesh, positions, filename):
         p_view = hide_point(pcl, camera=p)
         #show_pcl(p_view, name="camera "+str(p))
         filen = filename + str(nr) + ".ply"
+        file2 = filename + str(nr) + "_1.ply"
         o3d.io.write_point_cloud(filen, p_view)
+        pclA = transform_pcl(p_view, p)
+        o3d.io.write_point_cloud(file2, pclA)
         nr += 1
 
 if __name__=="__main__":
@@ -96,6 +111,9 @@ if __name__=="__main__":
 
     mypositions = [(0, -0.01, 0),(-0.01, -0.01, 0.0),(+0.01, -0.01, 0.0),(0, -0.00, -0.01),(-0.01, -0.00, -0.01),(+0.01, -0.00, -0.01),(0, -0.01, 0.0),(-0.01, -0.01, 0.0),(+0.01, -0.01, 0.0)]
     scan_mesh(cmesh, mypositions, "tmp/file")
+
+    mymesh = o3d.io.read_point_cloud("tmp/file1.ply")
+    transform_pcl(mymesh,(0,0,0))
 
     # o3d.io.write_point_cloud(str(OUTPATH / 'crop.ply')
     # pcl = stl2pcl(crop)
