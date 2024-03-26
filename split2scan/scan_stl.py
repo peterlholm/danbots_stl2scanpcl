@@ -15,7 +15,7 @@ FULL_RES_POINTS = 1000000
 PAINT_COLOR = True
 MAX_DISTANCE = 0.135
 
-DEBUG = False
+DEBUG = True
 
 def point_distance(p1, p2):
     "compute distance between 2 points"
@@ -111,12 +111,25 @@ def hide_point(pcl, camera=(0,-0.1, 0), radius=10.1):
     pcd = pcl.select_by_index(pt_map)
     return pcd
 
+
+def transform_pcl(pcl, position):
+    "transform pointcloud to look as camera"
+    print("Position", position)
+    transform = (-position[0],-position[1],-position[2])
+    pcl1 = deepcopy(pcl)
+    print(pcl1.get_center())
+    pcl1 = pcl1.translate(transform, relative=True)
+    #o3d.io.write_point_cloud('tmp/trans1.ply', pcl1)
+    return pcl1
+    pcl2 = pcl.translate((0.01,0,0), relative=False)
+    o3d.io.write_point_cloud('tmp/trans2.ply', pcl2)
+
 def scan_mesh(mesh, positions, filename):
     "filter mesh from given positions"
-    color = [ [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],
-                [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],
-                [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],
-                [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],
+    color = [ [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],                              # 1-8
+                [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],    # 2-16
+                [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],                            # 17-24
+                [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],    # 25-32
     ]
     nr=1
     opcl = stl2pcl(mesh)
@@ -125,10 +138,11 @@ def scan_mesh(mesh, positions, filename):
         pcl = deepcopy(opcl)
         p_view = hide_point(pcl, camera=p)
         #show_pcl(p_view, name="camera "+str(p))
-        filen = filename + str(nr) + ".ply"
-        o3d.io.write_point_cloud(filen, p_view)
-        pclA = transform_pcl(p_view, p)
-        o3d.io.write_point_cloud(file2, pclA)
+        #filen = filename + str(nr) + ".ply"
+        #o3d.io.write_point_cloud(filen, p_view)
+        #pclA = transform_pcl(p_view, p)
+        #o3d.io.write_point_cloud(file2, pclA)
+        
         print("camera position", p)
         newpcl = remove_point_distance(p_view, p, max_dist=MAX_DISTANCE)
         if PAINT_COLOR:
@@ -166,11 +180,11 @@ if __name__=="__main__":
     y=-0.015
     d=0.01
     mypositions = [(-dx*2, Y, Z), (-dx, Y, Z),  (0.00, Y, Z), (dx, Y, Z), (2*dx, Y, Z), # 1-5
-                    (-dx*2, Y+dy, Z), (-dx, Y+dy, Z),  (0.00, Y+dy, Z), (+dx, Y+dy, Z), (2*dx, Y+dy, Z),
-                    (-dx*2, Y+dy, Z+dz), (-dx, Y+dy, Z+dz),  (0.00, Y+dy, Z+dz), (+dx, Y+dy, Z+dz), (2*dx, Y+dy, Z+dz),
-                    (-dx*2, Y+2*dy, Z+2*dz), (-dx, Y+2*dy, Z+2*dz),  (0.00, Y+2*dy, Z+2*dz), (+dx, Y+2*dy, Z+2*dz), (2*dx, Y+2*dy, Z+2*dz),
-                    (-dx*2, Y+dy, Z+3*dz), (-dx, Y+dy, Z+3*dz),  (0.00, Y+dy, Z+3*dz), (+dx, Y+dy, Z+3*dz), (2*dx, Y+dy, Z+3*dz),
-                    (-dx*2, Y, Z+3*dz), (-dx, Y, Z+3*dz),  (0.00, Y, Z+3*dz), (+dx, Y, Z+3*dz), (2*dx, Y, Z+3*dz),
+                    (-dx*2, Y+dy, Z), (-dx, Y+dy, Z),  (0.00, Y+dy, Z), (+dx, Y+dy, Z), (2*dx, Y+dy, Z),                                    # 6-10
+                    (-dx*2, Y+dy, Z+dz), (-dx, Y+dy, Z+dz),  (0.00, Y+dy, Z+dz), (+dx, Y+dy, Z+dz), (2*dx, Y+dy, Z+dz),                     # 11-15
+                    (-dx*2, Y+2*dy, Z+2*dz), (-dx, Y+2*dy, Z+2*dz),  (0.00, Y+2*dy, Z+2*dz), (+dx, Y+2*dy, Z+2*dz), (2*dx, Y+2*dy, Z+2*dz), # 16-20
+                    (-dx*2, Y+dy, Z+3*dz), (-dx, Y+dy, Z+3*dz),  (0.00, Y+dy, Z+3*dz), (+dx, Y+dy, Z+3*dz), (2*dx, Y+dy, Z+3*dz),           # 21-25
+                    (-dx*2, Y, Z+4*dz), (-dx, Y, Z+4*dz),  (0.00, Y, Z+4*dz), (+dx, Y, Z+4*dz), (2*dx, Y, Z+4*dz),                          # 26-30
                   ]
     scan_mesh(cmesh, mypositions, "tmp/file")
 
