@@ -15,7 +15,7 @@ FULL_RES_POINTS = 1000000
 PAINT_COLOR = True
 MAX_DISTANCE = 0.135
 
-DEBUG = True
+DEBUG = False
 
 def point_distance(p1, p2):
     "compute distance between 2 points"
@@ -63,7 +63,7 @@ def show_pcl(meshlist, axis=True, name="showpcl"):
         axis_pcd = o3d.geometry.TriangleMesh.create_coordinate_frame(size=0.01, origin=[0, -0.0, 0.0])
         meshlist.append(axis_pcd)
     o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600)
- 
+
 def show_pcl2(meshlist, axis=True, name="showpcl", position=None):
     "Show pcl"
     for p in meshlist:
@@ -74,7 +74,7 @@ def show_pcl2(meshlist, axis=True, name="showpcl", position=None):
         meshlist.append(axis_pcd)
     if position is None:
         position=(0,0,5)
-    
+
     o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600,
                                 zoom=0.7,
                                 front=position,
@@ -124,16 +124,20 @@ def transform_pcl(pcl, position):
     pcl2 = pcl.translate((0.01,0,0), relative=False)
     o3d.io.write_point_cloud('tmp/trans2.ply', pcl2)
 
-def scan_mesh(mesh, positions, filename):
+def scan_mesh(mesh, positions, foldername):
     "filter mesh from given positions"
     color = [ [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],                              # 1-8
                 [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],    # 2-16
                 [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],                            # 17-24
                 [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],    # 25-32
     ]
+    foldername.mkdir(exist_ok=True)
+    (foldername / "ORG").mkdir(exist_ok=True)
+    (foldername / "cut").mkdir(exist_ok=True)
+    (foldername / "trans").mkdir(exist_ok=True)
     nr=1
     opcl = stl2pcl(mesh)
-    o3d.io.write_point_cloud(str(Path(filename).parent / 'ORG/center.ply'), opcl)
+    o3d.io.write_point_cloud(str(Path(foldername) / 'ORG/center.ply'), opcl)
     for p in positions:
         pcl = deepcopy(opcl)
         p_view = hide_point(pcl, camera=p)
@@ -142,16 +146,20 @@ def scan_mesh(mesh, positions, filename):
         #o3d.io.write_point_cloud(filen, p_view)
         #pclA = transform_pcl(p_view, p)
         #o3d.io.write_point_cloud(file2, pclA)
-        
+
         print("camera position", p)
-        newpcl = remove_point_distance(p_view, p, max_dist=MAX_DISTANCE)
+        newpcl = remove_point_distance(p_view, p, max_dist=0.03)
         if PAINT_COLOR:
             newpcl.paint_uniform_color(color[nr-1])
         if DEBUG:
-            show_pcl2([p_view, newpcl], name="camera "+str(p), position=p)
-        filen = f"{filename}{nr:02}.ply"
+            show_pcl2([p_view, newpcl], name="camera "+str(nr)+ " " +str(p), position=p)
+        filen = f"{foldername}/cut/file{nr:02}.ply"
+        file2 = f"{foldername}/trans/file{nr:02}.ply"
         o3d.io.write_point_cloud(filen, p_view)
-        print("Number of points", len(p_view.points))
+        tr=transform_pcl(newpcl, p)
+        o3d.io.write_point_cloud(file2, tr)
+        print("picture no",nr)
+        print("Number of points", len(p_view.points), len(newpcl.points))
         nr += 1
 
 if __name__=="__main__":
@@ -186,7 +194,7 @@ if __name__=="__main__":
                     (-dx*2, Y+dy, Z+3*dz), (-dx, Y+dy, Z+3*dz),  (0.00, Y+dy, Z+3*dz), (+dx, Y+dy, Z+3*dz), (2*dx, Y+dy, Z+3*dz),           # 21-25
                     (-dx*2, Y, Z+4*dz), (-dx, Y, Z+4*dz),  (0.00, Y, Z+4*dz), (+dx, Y, Z+4*dz), (2*dx, Y, Z+4*dz),                          # 26-30
                   ]
-    scan_mesh(cmesh, mypositions, "tmp/file")
+    scan_mesh(cmesh, mypositions, OUTPATH )
 
     # o3d.io.write_point_cloud(str(OUTPATH / 'crop.ply')
     # pcl = stl2pcl(crop)
