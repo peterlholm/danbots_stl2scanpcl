@@ -1,4 +1,4 @@
-"Split stl file in minor parts cload for stitching test"
+"Split stl file in minor parts cload for stitching test - OLD"
 from pathlib import Path
 import open3d as o3d
 # import colorsys
