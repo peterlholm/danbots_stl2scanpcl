@@ -11,18 +11,15 @@ from shutil import rmtree
 import open3d as o3d
 import numpy as np
 
-
 POINT_PR_MM2 = 160 * 160 / 75
-FULL_RES_POINTS = 1000000
 PAINT_COLOR = True
-MAX_DISTANCE = 0.135
 
-DEBUG = False
+DEBUG = True
 
-def point_distance(p1, p2):
-    "compute distance between 2 points"
-    dist = np.linalg.norm(np.array(p1)-np.array(p2))
-    print ("dist ", dist)
+# def point_distance(p1, p2):
+#     "compute distance between 2 points"
+#     dist = np.linalg.norm(np.array(p1)-np.array(p2))
+#     print ("dist ", dist)
 
 def remove_point_distance(pcl, pkt, max_dist=1):
     "Remove all pont in pointcloud where distance > max_dist"
@@ -51,11 +48,11 @@ def show_geo(meshlist, axis=True, name="show geometries"):
             if not p.has_triangle_normals():
                 p.compute_triangle_normals()
     o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600)
- 
+
 def show_geopos(meshlist, axis=True, name="showpcl2", position=None, lookat=None):
     "Show pcl"
     for p in meshlist:
-        print("Type", type(p))
+        #print("Type", type(p))
         if isinstance(p, o3d.geometry.PointCloud):
             if not p.has_normals():
                 p.estimate_normals()
@@ -102,7 +99,7 @@ def stl2pcl(stl, number=None, method="uniformly"):
 
 def hide_point(pcl, camera=(0,-0.1, 0), radius=1):
     "hide points seen from camera"
-    mesh, pt_map = pcl.hidden_point_removal(camera, radius)
+    _, pt_map = pcl.hidden_point_removal(camera, radius)
     pcd = pcl.select_by_index(pt_map)
     print(f"Hiding points from {len(pcl.points)} to {len(pt_map)}")
     #print("Hidden mesh type", type(mesh))
@@ -113,15 +110,12 @@ def hide_point(pcl, camera=(0,-0.1, 0), radius=1):
 
 def transform_pcl(pcl, position):
     "transform pointcloud to look as camera"
-    #print("Position", position)
     transform = (-position[0],-position[1],-position[2])
     pcl1 = deepcopy(pcl)
     #print(pcl1.get_center())
     pcl1 = pcl1.translate(transform, relative=True)
     #o3d.io.write_point_cloud('tmp/trans1.ply', pcl1)
     return pcl1
-    # pcl2 = pcl.translate((0.01,0,0), relative=False)
-    # o3d.io.write_point_cloud('tmp/trans2.ply', pcl2)
 
 def scan_mesh(mesh, positions, foldername):
     "filter mesh from given positions"
@@ -155,10 +149,6 @@ def scan_mesh(mesh, positions, foldername):
         file2 = f"{foldername}/trans/file{nr:02}.ply"
         o3d.io.write_point_cloud(filen, p_view)
         tr=transform_pcl(newpcl, p)
-        # if SCALE2MM:
-        #     trmm = tr.scale(1000, [0,0,0])
-        #     o3d.io.write_point_cloud(file2, trmm)
-        # else:
         o3d.io.write_point_cloud(file2, tr)
         #show_geo([tr], name="camera "+str(nr)+ " trans " +str(p))
         if DEBUG:
@@ -182,7 +172,6 @@ if __name__=="__main__":
         axi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=10, origin=(0,0,0))
         show_geo([cmesh, axi], name="Centered mesh")
         #show_geopos([cmesh, axi], name="Centered mesh2")
-        #show_pcl(orgpcl, name="original PCL")
         print(f"Object size  min: {orgpcl.get_min_bound()} Max: {orgpcl.get_max_bound()}")
         o3d.io.write_point_cloud(str(INFIL.with_name("pointcloud.ply")), orgpcl)
 
@@ -197,12 +186,16 @@ if __name__=="__main__":
     for x in range(5):
         pos = ((x-2)*3, Y, Z)
         mypositions.append(pos)
-
-
-    # for y in range(3):
-    #     for x in range(5):
-    #         pos = ((x-2)*3, -y*3, Z-y*4)
-    #         mypositions.append(pos)
+    Y = -10
+    Z = 5
+    for x in range(5):
+        pos = ((x-2)*3, Y, Z)
+        mypositions.append(pos)
+    Y = -5
+    Z = -5
+    for x in range(5):
+        pos = ((x-2)*3, Y, Z)
+        mypositions.append(pos)
 
     scan_mesh(cmesh, mypositions, OUTPATH )
 
