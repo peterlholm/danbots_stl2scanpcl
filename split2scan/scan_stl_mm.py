@@ -14,7 +14,7 @@ import numpy as np
 POINT_PR_MM2 = 160 * 160 / 75
 PAINT_COLOR = True
 
-DEBUG = True
+DEBUG = False
 
 # def point_distance(p1, p2):
 #     "compute distance between 2 points"
@@ -161,6 +161,7 @@ if __name__=="__main__":
     INFIL = Path('testdata/mm/fortand/fortand.cc.stl')
     OUTPATH = Path(__file__).parent.parent / "tmp"
     mymesh = o3d.io.read_triangle_mesh(str(INFIL))
+    show_geo([mymesh], name="test")
     cmesh = center_mesh(mymesh)
     cmesh.compute_triangle_normals()
     rmtree(OUTPATH, ignore_errors = True)
