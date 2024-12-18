@@ -1,6 +1,6 @@
 pylint
 
-numpy
+numpy==1.26.4
 #pillow
 #matplotlib
 open3d

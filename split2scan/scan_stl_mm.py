@@ -4,22 +4,20 @@ Scan pcl from different position
 generate new pointclods
 Workings in mm as unit
 """
-
+#from math import sqrt
 from copy import deepcopy
 from pathlib import Path
 from shutil import rmtree
 import open3d as o3d
 import numpy as np
 
-POINT_PR_MM2 = 160 * 160 / 75
+# scanning resolution
+# Omnicam: 79 True Definition: 54 Trios: 41 iTero: 34 point pr mm2
+# point pr mm2 default to a point distance 1/16 = 0.062 mm
+POINT_PR_MM2  = 256  # = 160 * 160 / 100
 PAINT_COLOR = True
 
 DEBUG = False
-
-# def point_distance(p1, p2):
-#     "compute distance between 2 points"
-#     dist = np.linalg.norm(np.array(p1)-np.array(p2))
-#     print ("dist ", dist)
 
 def remove_point_distance(pcl, pkt, max_dist=1):
     "Remove all pont in pointcloud where distance > max_dist"
@@ -81,8 +79,8 @@ def center_mesh(mesh):
     new = mesh.translate((0,0,0), relative=False)
     return new
 
-def stl2pcl(stl, number=None, method="uniformly"):
-    "convert mesh to pointcloud with number samples, number defaults to 160x160 points pr cm2"
+def stl2pcl(stl, number=None, method="poisson"):
+    "convert mesh to pointcloud with number samples, number defaults to POINT_PR_MM2"
     area = stl.get_surface_area()
     if number is None:
         no_points = int(POINT_PR_MM2 * area)
@@ -117,8 +115,19 @@ def transform_pcl(pcl, position):
     #o3d.io.write_point_cloud('tmp/trans1.ply', pcl1)
     return pcl1
 
-def scan_mesh(mesh, positions, foldername):
+def pos_pcl(pcl):
+    "Move center to std position"
+    stdpos = [0,0,-10]
+    center = pcl.get_center()
+    print("center", center)
+    trans = stdpos - center
+    print("Trans", trans)
+    newpcl = pcl.translate(trans)
+    return newpcl
+
+def scan_mesh(mesh, positions, foldername, left_side=True):
     "filter mesh from given positions"
+
     color = [ [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,0.7],                            # 1-8
                 [0.5,0,0],[0.5,0,1],[0.5,1,0],[0.5,1,1],[0.5,0,0],[0.5,0,0.5],[0.5,0.5,0],[0.5,0.5,0.5],    # 2-16
                 [0,0,0],[0,0,1],[0,1,0],[0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1],                            # 17-24
@@ -130,8 +139,14 @@ def scan_mesh(mesh, positions, foldername):
     # clear old
     rmtree(foldername / "cut", ignore_errors = True)
     rmtree(foldername / "trans", ignore_errors = True)
+    rmtree(foldername / "rot", ignore_errors = True)
     (foldername / "cut").mkdir(exist_ok=True)
     (foldername / "trans").mkdir(exist_ok=True)
+    (foldername / "rot").mkdir(exist_ok=True)
+    # picture see from front x right y up z front
+    # cut: pcl from view in org coordinate
+    # trans: pcl seen from viewpoint
+    # rot: pcl seen with wand
     nr=1
     opcl = stl2pcl(mesh)
     o3d.io.write_point_cloud(str(Path(foldername) / 'ORG/center.ply'), opcl)
@@ -147,10 +162,18 @@ def scan_mesh(mesh, positions, foldername):
             show_geopos([pcl, p_view, newpcl], name="camera "+str(nr)+ " all " +str(p), position=p, lookat=(0,0,10))
         filen = f"{foldername}/cut/file{nr:02}.ply"
         file2 = f"{foldername}/trans/file{nr:02}.ply"
+        file3 = f"{foldername}/rot/file{nr:02}.ply"
         o3d.io.write_point_cloud(filen, p_view)
         tr=transform_pcl(newpcl, p)
         o3d.io.write_point_cloud(file2, tr)
         #show_geo([tr], name="camera "+str(nr)+ " trans " +str(p))
+        # convert to wand
+        if left_side:
+            r = tr.get_rotation_matrix_from_xyz((0,0,-np.pi/2))
+            tr.rotate(r, center=p)
+            o3d.io.write_point_cloud(file3, tr)
+        #new = pos_pcl(tr)
+        #show_geo([new])
         if DEBUG:
             show_geopos([tr], name="camera "+str(nr)+ " trans pos " +str(p), position=p, lookat=(0,0,-10))
         print("picture no", nr, "Number of points", len(p_view.points), len(newpcl.points))
@@ -199,11 +222,3 @@ if __name__=="__main__":
         mypositions.append(pos)
 
     scan_mesh(cmesh, mypositions, OUTPATH )
-
-    # o3d.io.write_point_cloud(str(OUTPATH / 'crop.ply')
-    # pcl = stl2pcl(crop)
-    # o3d.io.write_triangle_mesh('crop.stl', crop)
-    # show_pcl(pcl)
-    # hide_point(pcl)
-    #mesh2ply(INFIL,OUTPATH / 'Bridge1.ply')
-    #meshsurface2ply(INFIL, OUTPATH / 'fil1.ply', OUTPATH / 'fil2.ply')
