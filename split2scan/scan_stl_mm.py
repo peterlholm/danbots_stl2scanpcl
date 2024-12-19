@@ -192,7 +192,7 @@ if __name__=="__main__":
     o3d.io.write_triangle_mesh(str(OUTPATH / 'ORG' / 'center.stl'), cmesh)
 
     if DEBUG:
-        orgpcl = stl2pcl(cmesh, 1000000)
+        orgpcl = stl2pcl(cmesh)
         axi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=10, origin=(0,0,0))
         show_geo([cmesh, axi], name="Centered mesh")
         #show_geopos([cmesh, axi], name="Centered mesh2")
