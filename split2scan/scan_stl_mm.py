@@ -163,7 +163,7 @@ def scan_mesh(mesh, positions, foldername, left_side=True):
         filen = f"{foldername}/cut/file{nr:02}.ply"
         file2 = f"{foldername}/trans/file{nr:02}.ply"
         file3 = f"{foldername}/rot/file{nr:02}.ply"
-        o3d.io.write_point_cloud(filen, p_view)
+        o3d.io.write_point_cloud(filen, newpcl)
         tr=transform_pcl(newpcl, p)
         o3d.io.write_point_cloud(file2, tr)
         #show_geo([tr], name="camera "+str(nr)+ " trans " +str(p))

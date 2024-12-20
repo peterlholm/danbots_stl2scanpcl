@@ -1,8 +1,9 @@
-from copy import deepcopy
+"test module"
+#from copy import deepcopy
 from pathlib import Path
-from shutil import rmtree
+#from shutil import rmtree
 import open3d as o3d
-import numpy as np
+#import numpy as np
 
 # scanning resolution
 # Omnicam: 79 True Definition: 54 Trios: 41 iTero: 34 point pr mm2
@@ -35,5 +36,9 @@ INFIL = Path('testdata/mm/fortand/fortand.cc.stl')
 OUTPATH = Path(__file__).parent.parent / "tmp"
 mymesh = o3d.io.read_triangle_mesh(str(INFIL))
 
-orgpcl = stl2pcl(mymesh)
+orgpcl = stl2pcl(mymesh, number=10000)
+orgpcl.paint_uniform_color([0,1,0])
 axi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=10, origin=(0,0,0))
+o3d.visualization.draw([orgpcl, axi])
+
+o3d.io.write_point_cloud("tmp/test.ply", orgpcl, write_ascii=True)
