@@ -17,7 +17,7 @@ import numpy as np
 POINT_PR_MM2  = 256  # = 160 * 160 / 100
 PAINT_COLOR = True
 
-DEBUG = False
+DEBUG = True
 
 def remove_point_distance(pcl, pkt, max_dist=1):
     "Remove all pont in pointcloud where distance > max_dist"
@@ -45,7 +45,8 @@ def show_geo(meshlist, axis=True, name="show geometries"):
         elif isinstance(p, o3d.geometry.TriangleMesh):
             if not p.has_triangle_normals():
                 p.compute_triangle_normals()
-    o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600)
+    o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600,
+                                      point_show_normal=True, mesh_show_wireframe=True, mesh_show_back_face=True)
 
 def show_geopos(meshlist, axis=True, name="showpcl2", position=None, lookat=None):
     "Show pcl"
@@ -64,15 +65,19 @@ def show_geopos(meshlist, axis=True, name="showpcl2", position=None, lookat=None
         position=(0,0,5)
     if lookat is None:
         lookat = (0,0,0)
+    camera = o3d.geometry.TriangleMesh.create_sphere(radius=1, resolution=20)
+    camera.paint_uniform_color([0.2,0,0])
+    camera.translate(position)
+    meshlist.append(camera)
     print(f"Position {position} Lookat {lookat}")
     o3d.visualization.draw_geometries(meshlist, window_name=name, width=800, height=600,
                                 zoom=0.7,
                                 front=position,
                                 lookat=lookat,
                                 up=(0,1,0),
-                                # point_show_normal=False,
-                                # mesh_show_back_face=True,
-                                mesh_show_wireframe=True
+                                point_show_normal=False,
+                                mesh_show_back_face=True,
+                                mesh_show_wireframe=False
     )
 def center_mesh(mesh):
     "center the mesh around 0,0,0"
@@ -148,7 +153,7 @@ def scan_mesh(mesh, positions, foldername, left_side=True):
     # trans: pcl seen from viewpoint
     # rot: pcl seen with wand
     nr=1
-    opcl = stl2pcl(mesh)
+    opcl = stl2pcl(mesh, number=None)
     o3d.io.write_point_cloud(str(Path(foldername) / 'ORG/center.ply'), opcl)
     for p in positions:
         print("Camera position", p)
@@ -184,15 +189,15 @@ if __name__=="__main__":
     INFIL = Path('testdata/mm/fortand/fortand.cc.stl')
     OUTPATH = Path(__file__).parent.parent / "tmp"
     mymesh = o3d.io.read_triangle_mesh(str(INFIL))
-    show_geo([mymesh], name="test")
+    show_geo([mymesh], name="Input mesh")
     cmesh = center_mesh(mymesh)
     cmesh.compute_triangle_normals()
     rmtree(OUTPATH, ignore_errors = True)
     (OUTPATH / 'ORG').mkdir(exist_ok=True, parents=True)
     o3d.io.write_triangle_mesh(str(OUTPATH / 'ORG' / 'center.stl'), cmesh)
-
+    #object center i 0,0,0
     if DEBUG:
-        orgpcl = stl2pcl(cmesh)
+        orgpcl = stl2pcl(cmesh, number=1000)
         axi = o3d.geometry.TriangleMesh.create_coordinate_frame(size=10, origin=(0,0,0))
         show_geo([cmesh, axi], name="Centered mesh")
         #show_geopos([cmesh, axi], name="Centered mesh2")
@@ -220,5 +225,6 @@ if __name__=="__main__":
     for x in range(5):
         pos = ((x-2)*3, Y, Z)
         mypositions.append(pos)
-
+    if DEBUG:
+        print("positions: ", mypositions)
     scan_mesh(cmesh, mypositions, OUTPATH )
